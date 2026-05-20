@@ -66,7 +66,9 @@ def list_folder(_svc, folder_id):
         r = _svc.files().list(
             q=f"'{folder_id}' in parents and trashed=false",
             fields="nextPageToken, files(id,name,modifiedTime,size)",
-            pageToken=token).execute()
+            pageToken=token,
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True).execute()
         files.extend(r.get("files",[]))
         token = r.get("nextPageToken")
         if not token:
@@ -95,7 +97,7 @@ def find_file_for_date(files, target: date):
 
 
 def download_csv(svc, file_id, file_name, size_bytes=None) -> pd.DataFrame:
-    req  = svc.files().get_media(fileId=file_id)
+    req  = svc.files().get_media(fileId=file_id, supportsAllDrives=True)
     buf  = io.BytesIO()
     dl   = MediaIoBaseDownload(buf, req, chunksize=20*1024*1024)
     mb   = f"{size_bytes/1e6:.0f} MB" if size_bytes else "file"
@@ -112,25 +114,26 @@ def download_csv(svc, file_id, file_name, size_bytes=None) -> pd.DataFrame:
 def ensure_reports_folder(svc, parent_id):
     q   = (f"'{parent_id}' in parents and name='{REPORTS_FOLDER_NAME}' "
            f"and mimeType='application/vnd.google-apps.folder' and trashed=false")
-    res = svc.files().list(q=q, fields="files(id)").execute().get("files",[])
+    res = svc.files().list(q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute().get("files",[])
     if res:
         return res[0]["id"]
     f = svc.files().create(body={"name":REPORTS_FOLDER_NAME,
         "mimeType":"application/vnd.google-apps.folder","parents":[parent_id]},
-        fields="id").execute()
+        fields="id", supportsAllDrives=True).execute()
     return f["id"]
 
 
 def upload_report(svc, folder_id, filename, html):
     old = svc.files().list(
         q=f"'{folder_id}' in parents and name='{filename}' and trashed=false",
-        fields="files(id)").execute().get("files",[])
+        fields="files(id)", supportsAllDrives=True,
+        includeItemsFromAllDrives=True).execute().get("files",[])
     for f in old:
-        svc.files().delete(fileId=f["id"]).execute()
+        svc.files().delete(fileId=f["id"], supportsAllDrives=True).execute()
     media = MediaInMemoryUpload(html.encode(), mimetype="text/html")
     up    = svc.files().create(
         body={"name":filename,"parents":[folder_id],"mimeType":"text/html"},
-        media_body=media, fields="id").execute()
+        media_body=media, fields="id", supportsAllDrives=True).execute()
     svc.permissions().create(fileId=up["id"],
         body={"type":"anyone","role":"reader"}).execute()
     return f"https://drive.google.com/file/d/{up['id']}/view"
