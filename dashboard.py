@@ -9,21 +9,30 @@ Host for your whole team on internal network (e.g. http://10.83.75.181):
     streamlit run dashboard.py --server.port 80 --server.address 0.0.0.0 --server.headless true
 """
 
-import io, os, re, json
+import io, os, re, json, sys
 from datetime import date, datetime, timedelta
 
-import pandas as pd
 import streamlit as st
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload, MediaInMemoryUpload
 
-from rca_engine import (
-    run_rca, tag_rows, filter_df,
-    get_dimension_values, normalise_cols,
-    DIMENSION_COLS, DIMENSION_LABELS, RULE_DEFINITIONS,
-)
-from report_generator import generate_html
+# ── safe import block — shows real error instead of "Oh no" ──────────────────
+try:
+    import pandas as pd
+    import numpy as np
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaIoBaseDownload, MediaInMemoryUpload
+    from rca_engine import (
+        run_rca, tag_rows, filter_df,
+        get_dimension_values, normalise_cols,
+        DIMENSION_COLS, DIMENSION_LABELS, RULE_DEFINITIONS,
+    )
+    from report_generator import generate_html
+except Exception as _import_err:
+    st.error(f"Import failed: {_import_err}")
+    st.code(str(_import_err))
+    import traceback
+    st.code(traceback.format_exc())
+    st.stop()
 
 # ── page ───────────────────────────────────────────────────────────────────────
 st.set_page_config(
