@@ -47,8 +47,12 @@ SERVICE_ACCOUNT_FILE = os.environ.get(
 @st.cache_resource
 def get_drive_service():
     if "gcp_service_account" in st.secrets:
+        info = dict(st.secrets["gcp_service_account"])
+        # Fix: Streamlit secrets sometimes stores \n as literal backslash-n
+        if "private_key" in info:
+            info["private_key"] = info["private_key"].replace("\\n", "\n")
         creds = service_account.Credentials.from_service_account_info(
-            dict(st.secrets["gcp_service_account"]), scopes=SCOPES)
+            info, scopes=SCOPES)
     else:
         creds = service_account.Credentials.from_service_account_file(
             SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -422,9 +426,12 @@ def main():
         raw_file = find_file_for_date(all_files, sel_date)
         if not raw_file:
             st.error(f"No CSV found for {sel_date}.")
-            avail = [f["name"] for f in all_files if f["name"].endswith(".csv")
-                     and "summary_" not in f["name"].lower()]
-            if avail: st.write("Files in folder:", avail)
+            all_csv = [f["name"] for f in all_files]
+            st.warning(f"Total files seen in folder: {len(all_files)}")
+            if all_csv:
+                st.write("All files visible to the app:", all_csv)
+            else:
+                st.error("The app can see 0 files in the Drive folder. This means the service account does not have access to the folder. Please share the folder with the service account email from your creds.json (the client_email field).")
             st.stop()
 
         size = int(raw_file.get("size",0))
