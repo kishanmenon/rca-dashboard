@@ -149,7 +149,7 @@ def to_num(df: pd.DataFrame, cols: list) -> pd.DataFrame:
 
 
 def safe(df, col, default=0):
-    return df[col] if col in df.columns else pd.Series(default, index=df.index)
+    return df[col] if col in df.columns else pd.Series(default, index=df.index, dtype=float if isinstance(default, (int,float)) else object)
 
 
 def get_dimension_values(df: pd.DataFrame, dimension: str) -> list:
@@ -228,7 +228,8 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     inactive_mask = status == "INACTIVE"
     df["inactivated_by_fk"] = False
     if inactive_mask.any():
-        df.loc[inactive_mask, "inactivated_by_fk"] = df[inactive_mask].apply(is_fk, axis=1)
+        fk_result = df[inactive_mask].apply(is_fk, axis=1)
+        df.loc[inactive_mask, "inactivated_by_fk"] = fk_result.to_numpy()
 
     return df.reset_index(drop=True)
 
@@ -388,7 +389,7 @@ def run_rca(df_raw: pd.DataFrame, dimension: str, value: str, date_str: str) -> 
         total = float(subset["order_loss_per_day"].sum())
         by_grp = []
         if grp_col and grp_col in subset.columns:
-            g = (subset.groupby(grp_col, dropna=False)
+            g = (subset.groupby(grp_col, dropna=False, observed=True)
                  .agg(count=("order_loss_per_day","count"),
                       loss=("order_loss_per_day","sum"))
                  .reset_index().sort_values("loss", ascending=False))
@@ -518,7 +519,7 @@ def run_rca(df_raw: pd.DataFrame, dimension: str, value: str, date_str: str) -> 
     grp_col = "display_name" if "display_name" in df.columns else "seller_id"
     cascade = []
     if grp_col in df.columns:
-        cdf = df.groupby(grp_col).agg(
+        cdf = df.groupby(grp_col, observed=True).agg(
             total_listings    =("listing_id","count") if "listing_id" in df.columns else (grp_col,"count"),
             total_orders_daily=("rate_l7d","sum"),
             oos_count         =("yesterday_atp", lambda x:(x==0).sum()),
@@ -534,7 +535,7 @@ def run_rca(df_raw: pd.DataFrame, dimension: str, value: str, date_str: str) -> 
     if "owner" in df.columns and grp_col in df.columns:
         um = df[df["owner"].str.upper().str.contains("UM",na=False)]
         if not um.empty:
-            ss = um.groupby(grp_col).agg(
+            ss = um.groupby(grp_col, observed=True).agg(
                 l30d_orders=("l30d_orders","sum"),l7d_orders=("l7d_orders","sum"),
                 avg_asp=("l7d_asp","mean"),avg_health=("health_score","mean"),
             ).reset_index()
