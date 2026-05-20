@@ -1,5 +1,5 @@
-pandas==2.2.2
-numpy==1.26.4
-streamlit==1.35.0
-google-auth==2.29.0
-google-api-python-client==2.130.0
+pandas
+numpy
+streamlit
+google-auth
+google-api-python-client
