@@ -411,7 +411,7 @@ code{{background:#f1f3f4;padding:1px 5px;border-radius:3px;font-size:11px}}
     </div>
   </div>
 
-  {_section("📋","Rules Causing Order Loss — Ranked by Impact", f"""
+  {_section("📋","Rules Causing Order Loss — Ranked by Impact", """
     <div class="info-bar">Sorted by orders lost yesterday vs L7D run rate. Loss shown as 0 where that window was not triggered.</div>
     {rules_html}
     <div class="subsection">
@@ -420,12 +420,12 @@ code{{background:#f1f3f4;padding:1px 5px;border-radius:3px;font-size:11px}}
     </div>
   """, "rules")}
 
-  {_section("🎯","Priority Actionables", f"""
+  {_section("🎯","Priority Actionables", """
     <div class="info-bar">Precedence: Deactivated by FK → Seller Switched Off → Out of Stock → TP Price Hike → ASP Price Hike. Each listing assigned one rule.</div>
     {actions_html}
   """, "actionables")}
 
-  {_section("💸","Price Hike Analysis", f"""
+  {_section("💸","Price Hike Analysis", """
     <div class="subsection">
       <div class="subsection-title">🏷️ TP Price Hike (Transaction Price) — {_n(meta.get('tp_hike_count'))} listings</div>
       <div class="info-bar">L1D TP &gt; L7D/L30D TP × 1.05 AND orders dropped. Loss = 0 where window was not triggered.</div>
@@ -438,12 +438,12 @@ code{{background:#f1f3f4;padding:1px 5px;border-radius:3px;font-size:11px}}
     </div>
   """, "price")}
 
-  {_section("📦","Out of Stock (ATP = 0, Active)", f"""
+  {_section("📦","Out of Stock (ATP = 0, Active)", """
     <div class="info-bar">Both L7D and L30D losses shown — OOS impacts both windows equally.</div>
     {oos_html}
   """, "oos")}
 
-  {_section("🚫","Inactive Listings", f"""
+  {_section("🚫","Inactive Listings", """
     <div class="subsection">
       <div class="subsection-title">🔴 Deactivated by Flipkart — {_n(fk.get('total_count'))} listings · L7D loss: {_n(fk.get('total_loss_vs_l7d'))}/day · L30D loss: {_n(fk.get('total_loss_vs_l30d'))}/day</div>
       <div style="margin-bottom:10px">{fk_reason_html}</div>
@@ -456,7 +456,7 @@ code{{background:#f1f3f4;padding:1px 5px;border-radius:3px;font-size:11px}}
     </div>
   """, "inactive")}
 
-  {_section("🔬","Additional Insights", f"""
+  {_section("🔬","Additional Insights", """
     <div class="subsection">
       <div class="subsection-title">⚡ Multiple Problems at Once — {_n(mp.get('count'))} listings · {_n(mp.get('total_loss_vs_l7d'))} orders/day L7D loss</div>
       <div class="warn-bar">These listings have 2+ issues simultaneously — losing orders from multiple directions. Highest priority.</div>
@@ -479,7 +479,7 @@ code{{background:#f1f3f4;padding:1px 5px;border-radius:3px;font-size:11px}}
     </div>
   """, "insights")}
 
-  {_section("💡","Recommendations", f"""
+  {_section("💡","Recommendations", """
     <div class="subsection">
       <div class="subsection-title">⬆️ UM → KAM Upgrade Candidates</div>
       <div class="info-bar">Qualification: high L30D volume, positive growth trend. Growth % = (DRR change / base DRR) × 100. ✅ = L1D DRR &gt; L7D DRR &gt; L30D DRR continuously.</div>
